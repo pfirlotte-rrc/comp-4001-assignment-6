@@ -96,8 +96,8 @@ docker compose up --build -d
 
 # Performs health checks (e.g., curl/wget against http://localhost:3000 and http://localhost:5000 if available).
 #   - Validate the build/deploy and list images.
-wget --no-verbose --tries=1 --spider http://localhost/3000 || exit 1
-wget --no-verbose --tries=1 --spider http://localhost/5000 || exit 1
+wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+wget --no-verbose --tries=1 --spider http://localhost:5000 || exit 1
 
 # Show docker ps.
 #   - Collect the container ID of the nginx image and save it as a variable.
@@ -112,7 +112,7 @@ else
 fi
 
 # Ensure jq is installed
-if command jq --version &> /dev/null; then
+if command -v jq &> /dev/null; then
     echo "jq installation found"
 else
     echo "Installing jq."
@@ -128,13 +128,13 @@ docker image inspect nginx:alpine > nginx-logs.txt
 
 # Extract and echo the values of specified keys from the file.
 #   - Extract & echo RepoTags
-echo "RepoTags:     $(jq -r '.[0].RepoTags[]' nginx_logs.txt)"
+echo "RepoTags:     $(jq -r '.[0].RepoTags[]' nginx-logs.txt)"
 #   - Extract & echo Created
-echo "Created:      $(jq -r '.[0].Created'    nginx_logs.txt)"
+echo "Created:      $(jq -r '.[0].Created'    nginx-logs.txt)"
 #   - Extract & echo Os
-echo "Os:           $(jq -r '.[0].Os'         nginx_logs.txt)"
+echo "Os:           $(jq -r '.[0].Os'         nginx-logs.txt)"
 #   - Extract & echo Config
 echo "Config:"
-jq '.[0].Config' nginx_logs.txt
+jq '.[0].Config' nginx-logs.txt
 #   - Extract & echo ExposedPorts
-echo "ExposedPorts: $(jq -r '.[0].Config.ExposedPorts | keys[]' nginx_logs.txt)"
+echo "ExposedPorts: $(jq -r '.[0].Config.ExposedPorts | keys[]' nginx-logs.txt)"
