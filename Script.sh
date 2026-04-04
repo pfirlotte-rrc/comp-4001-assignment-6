@@ -10,14 +10,62 @@ sudo apt update && sudo apt upgrade -y || { echo "Failed to update/upgrade packa
 if command -v docker &> /dev/null; then
     echo "Docker installation found"
 else
-    echo "Install Docker."
+    echo "Installing Docker."
+        # --- Docker Installation ---
+
+    # 2. Install Required Dependencies for Docker (already good)
+    echo -e "\n--- Installing required dependencies for Docker ---"
+    sudo apt install -y ca-certificates curl gnupg lsb-release || { echo "Failed to install Docker dependencies. Exiting."; exit 1; }
+
+
+    # 3. Add Docker's Official GPG Key
+    # This command directly adds the GPG key to the trusted.gpg.d directory for apt.
+    echo -e "\n--- Adding Docker's official GPG key ---"
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg || { echo "Failed to download/add Docker GPG key. Exiting."; exit 1; }
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg # Set permissions to be readable by all
+
+    # 4. Add the Docker APT Repository
+    # This command adds the repository using the new 'signed-by' syntax with the direct GPG key file path.
+    echo -e "\n--- Adding the Docker APT repository ---"
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null || { echo "Failed to add Docker repository. Exiting."; exit 1; }
+
+    # 5. Update apt Package Index Again
+    echo -e "\n--- Updating apt package index again for Docker ---"
+    sudo apt update || { echo "Failed to update apt index for Docker. Exiting."; exit 1; }
+
+    # 6. Install Docker Engine, CLI, and Containerd
+    echo -e "\n--- Installing Docker Engine, CLI, and Containerd ---"
+    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin || { echo "Failed to install Docker components. Exiting."; exit 1; }
+
+    # 7. Add Your User to the 'docker' Group
+    echo -e "\n--- Adding current user ($USER) to the 'docker' group ---"
+    sudo usermod -aG docker $USER || { echo "Failed to add user to docker group. Exiting."; exit 1; }
+
+    # 8. (Optional) Configure Docker Service to Start Automatically
+    echo -e "\n--- (Optional) Adding Docker service start command to ~/.bashrc ---"
+    if ! grep -q "sudo service docker start" ~/.bashrc; then
+        echo 'sudo service docker start > /dev/null 2>&1 || true' >> ~/.bashrc
+        echo "Added 'sudo service docker start' to ~/.bashrc."
+    else
+        echo "Line already exists in ~/.bashrc. Skipping."
+    fi
 fi
 
 #----------Check Docker Compose----------
 if command -v docker compose &> /dev/null; then
     echo "Docker compose installation found"
 else
-    echo "Install Docker Compose."
+    echo "Installing Docker Compose."
+    # ===== INSTALL DOCKER COMPOSE v2 =====
+    echo "=== Installing Docker Compose v2 ==="
+    DOCKER_COMPOSE_VERSION="2.23.0"
+    sudo curl -L "https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
+      -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
 fi
 
 #----------Check Port 3000----------
@@ -53,20 +101,40 @@ wget --no-verbose --tries=1 --spider http://localhost/5000 || exit 1
 
 # Show docker ps.
 #   - Collect the container ID of the nginx image and save it as a variable.
-
+docker ps
+NGINX_ID=$(docker ps --filter "ancestor=nginx:alpine" --format "{{.ID}}")
 
 # Validate the page renders at URL.
+if curl --head --silent --max-time 10 http://localhost:3000 > /dev/null 2>&1; then
+    echo "URL exists"
+else
+    echo "URL doesn't exist or isn't reachable"
+fi
 
+# Ensure jq is installed
+if command jq --version &> /dev/null; then
+    echo "jq installation found"
+else
+    echo "Installing jq."
+    sudo apt install jq -y
+fi
 
-# Ensure jq is installed, then inspect nginx:alpine image that was created.
+# Inspect nginx:alpine image that was created.
+docker image inspect nginx:alpine
 
-
-# Put the log of docker inspect nginx:alpine in a text file named nginx#logs
+# Put the log of docker inspect nginx:alpine in a text file named nginx-logs
+docker image inspect nginx:alpine > nginx-logs.txt
 
 
 # Extract and echo the values of specified keys from the file.
-#   - Extract RepoTags
-#   - Extract Created
-#   - Extract Os
-#   - Extract Config
-#   - Extract ExposedPorts
+#   - Extract & echo RepoTags
+echo "RepoTags:     $(jq -r '.[0].RepoTags[]' nginx_logs.txt)"
+#   - Extract & echo Created
+echo "Created:      $(jq -r '.[0].Created'    nginx_logs.txt)"
+#   - Extract & echo Os
+echo "Os:           $(jq -r '.[0].Os'         nginx_logs.txt)"
+#   - Extract & echo Config
+echo "Config:"
+jq '.[0].Config' nginx_logs.txt
+#   - Extract & echo ExposedPorts
+echo "ExposedPorts: $(jq -r '.[0].Config.ExposedPorts | keys[]' nginx_logs.txt)"
