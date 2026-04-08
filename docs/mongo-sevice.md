@@ -1,0 +1,9 @@
+# 1.1. Technical Requirements (mongo-service.yaml)
+
+- Service Name: The service must be named mongo.
+- Service Type: The service should be of type ClusterIP to ensure it's only
+accessible from within the cluster.
+- Port Configuration: The service should expose port 27017 internally. This
+port must be mapped to the target port 27017 on the MongoDB pods.
+- Selector: The service must be configured to select pods with the label app:
+mongo to correctly route traffic to the database instances.
