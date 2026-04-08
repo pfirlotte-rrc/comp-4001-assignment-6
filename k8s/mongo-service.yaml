@@ -6,3 +6,17 @@
 # port must be mapped to the target port 27017 on the MongoDB pods.
 # • Selector: The service must be configured to select pods with the label app:
 # mongo to correctly route traffic to the database instances.
+
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  type: ClusterIP
+  selector:
+    matchLabels:
+      app: mongo
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
