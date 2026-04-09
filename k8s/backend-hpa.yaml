@@ -10,7 +10,7 @@ metadata:
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
-    kind: Deployement
+    kind: Deployment
     name: backend
   minReplicas: 3
   maxReplicas: 10

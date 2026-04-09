@@ -1,3 +1,5 @@
+minikube status || minikube start --driver=docker
+
 # Minikube's Docker daemon
 eval $(minikube docker-env)
 
