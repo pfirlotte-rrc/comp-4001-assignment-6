@@ -31,7 +31,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: backend-secret
-                value: secret-key
+                key: secret-key
 
 ## Health Probes
         readinessProbe:
@@ -64,6 +64,6 @@ metadata:
   name: backend-secret
 type: Opaque
 data:
-  secret-key: supersecretkey
+  secret-key: c3VwZXJzZWNyZXRrZXk=
 
   
