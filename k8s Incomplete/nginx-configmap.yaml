@@ -17,13 +17,11 @@ http {
         listen 80;
         server_name localhost;
 
-        # Serve static files
         location / {
             root /usr/share/nginx/html;
             try_files $uri $uri/ /index.html;
         }
 
-        # Handle all backend routes
         location ~ ^/(api|deposit|withdraw|login|register|dashboard|logout) {
             proxy_pass http://backend;
             proxy_set_header Host $host;
