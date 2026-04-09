@@ -4,7 +4,6 @@ metadata:
   name: nginx-conf
 data:
   nginx.conf: |
-
     worker_processes auto;
 
     events {
@@ -27,6 +26,10 @@ data:
         upstream studentportfolio {
             server studentportfolio:80;
         }
+
+        server {
+            listen 80;
+            server_name localhost;
 
             location /api/transactions {
                 proxy_pass http://transactions;
