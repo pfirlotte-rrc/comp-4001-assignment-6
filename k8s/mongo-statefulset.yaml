@@ -1,13 +1,14 @@
 apiVersion: apps/v1
-
 kind: StatefulSet
 metadata:
   name: mongo
 spec:
+  serviceName: mongo
   replicas: 1
   selector:
     matchLabels:
       app: mongo
+  ## Pod Template
   template:
     metadata:
       labels:
@@ -16,36 +17,43 @@ spec:
       containers:
       - name: mongo
         image: mongo:4.4.18
-        args:  ["--bind_ip_all"]
+        args: ["--bind_ip_all"]
         ports:
         - containerPort: 27017
-        name: mongo
-    livenessProbe:
-      tcpSocket:
-        port: 27017
-      initialDelaySeconds: 20
-      periodSeconds: 10
-    readinessProbe:
-      tcpSocket:
-        port: 27017
-      initialDelaySeconds: 10
-      periodSeconds: 5
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "256Mi"
-      limits:
-        cpu: "500m"
-        memory: 1Gi"
-      volumeMounts:
-        - name: mongo-data
-          mountPath: /data/db
-  volumeClaimTemplate:
-    - metadata:
-        name: mongo-data
-      spec:
-        accessMode:
-        - ReadWriteOnce
+
+        ## Health Probes
+        livenessProbe:
+          tcpSocket:
+            port: 27017
+          initialDelaySeconds: 20
+          periodSeconds: 10
+
+        readinessProbe:
+          tcpSocket:
+            port: 27017
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+        ## Resource Management
         resources:
           requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+        
+        ## Volumes
+        volumeMounts:
+        - name: mongo-data
+          mountPath: /data/db
+
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
           storage: 2Gi
