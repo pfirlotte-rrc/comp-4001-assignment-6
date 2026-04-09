@@ -20,8 +20,8 @@ spec:
       - name: studentportfolio
         image: studentportfolio:latest
         ports:
-          - containerPort: 80
-            name: http
+        - containerPort: 80
+          name: http
 
 ## Health Probes
         readinessProbe:
@@ -30,6 +30,7 @@ spec:
             port: http
           initialDelaySeconds: 3
           periodSeconds: 5
+
         livenessProbe:
           httpGet:
             path: /
@@ -44,5 +45,5 @@ spec:
             memory: "64Mi"
           limits:
             cpu: "200m"
-            memory: 256Mi"
+            memory: "256Mi"
   
