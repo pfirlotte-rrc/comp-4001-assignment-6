@@ -23,13 +23,18 @@ spec:
           - containerPort: 80
             name: http
 
+## Volume Mounts
+    volumeMounts:
+      - name: nginx-conf
+        mountPath: /etc/nginx/nginx.conf
+        subPath: nginx.conf
 
 ## Health Probes
         readinessProbe:
           httpGet:
             path: /
             port: http
-          initialDelaySeconds: 5
+          initialDelaySeconds: 3
           periodSeconds: 5
         livenessProbe:
           httpGet:
@@ -41,10 +46,17 @@ spec:
 ## Resource Management
         resources:
           requests:
-            cpu: "100m"
-            memory: "128Mi"
+            cpu: "50m"
+            memory: "64Mi"
           limits:
-            cpu: "500m"
-            memory: 512Mi"
+            cpu: "200m"
+            memory: 256MiMi"
 
-  
+## Volumes
+  volumes:
+    - name: nginx-config
+      configMap:
+        name: nginx-config
+        items:
+          - key: nginx.conf
+            path: nginx.conf
