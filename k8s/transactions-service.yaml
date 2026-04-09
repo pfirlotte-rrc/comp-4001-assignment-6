@@ -6,8 +6,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    matchLabels:
-      app: transactions
+    app: transactions
   ports:
     - port: 3000
       name: http

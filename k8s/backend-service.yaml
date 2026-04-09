@@ -6,9 +6,9 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    matchLabels:
-      app: backend
+    app: backend
   ports:
     - port: 5000
       name: http
       targetPort: http
+      

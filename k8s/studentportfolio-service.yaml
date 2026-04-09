@@ -6,10 +6,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    matchLabels:
-      app: studentportfolio
-
-## Port Configuration:
+    app: studentportfolio
   ports:
     - port: 80
       name: http
