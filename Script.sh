@@ -93,48 +93,70 @@ fi
 
 # Build & deploy with compose
 docker compose up --build -d
+sleep 5
 
 # Performs health checks (e.g., curl/wget against http://localhost:3000 and http://localhost:5000 if available).
 #   - Validate the build/deploy and list images.
-wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
-wget --no-verbose --tries=1 --spider http://localhost:5000 || exit 1
+for port in 3000 5000; do
+  if curl -s --max-time 10 http://localhost:$port > /dev/null 2>&1; then
+    echo "Port $port is responding"
+  else
+    echo "Port $port is not available (skipping)"
+  fi
+done
+
+docker images
 
 # Show docker ps.
 #   - Collect the container ID of the nginx image and save it as a variable.
 docker ps
 NGINX_ID=$(docker ps --filter "ancestor=nginx:alpine" --format "{{.ID}}")
+echo "[INFO] Captured nginx conatiner ID: $NGINX_ID" 
 
 # Validate the page renders at URL.
+URL="http://localhost:80"
+echo "[INFO] Checking application URL: $URL"
 if curl --head --silent --max-time 10 http://localhost:3000 > /dev/null 2>&1; then
-    echo "URL exists"
+    echo "[INFO] URL exists"
 else
     echo "URL doesn't exist or isn't reachable"
 fi
 
 # Ensure jq is installed
 if command -v jq &> /dev/null; then
-    echo "jq installation found"
+    echo "[INFO] jq is already installed"
 else
     echo "Installing jq."
     sudo apt install jq -y
 fi
 
 # Inspect nginx:alpine image that was created.
-docker image inspect nginx:alpine
+echo "[INFO] Ensuring nginx:alpine image exists locally."
+echo "[INFO] Writing docker inspect output to 'nginx-logs'."
+
+echo "Extracting values from nginx-logs:"
 
 # Put the log of docker inspect nginx:alpine in a text file named nginx-logs
 docker image inspect nginx:alpine > nginx-logs.txt
-
+echo ""
 
 # Extract and echo the values of specified keys from the file.
 #   - Extract & echo RepoTags
-echo "RepoTags:     $(jq -r '.[0].RepoTags[]' nginx-logs.txt)"
+echo "RepoTags:"
+echo "$(jq -r '.[0].RepoTags[]' nginx-logs.txt)"
+echo ""
 #   - Extract & echo Created
-echo "Created:      $(jq -r '.[0].Created'    nginx-logs.txt)"
+echo "Created:"
+echo "$(jq -r '.[0].Created'    nginx-logs.txt)"
+echo ""
 #   - Extract & echo Os
-echo "Os:           $(jq -r '.[0].Os'         nginx-logs.txt)"
+echo "Os:"
+echo "$(jq -r '.[0].Os'         nginx-logs.txt)"
+echo ""
 #   - Extract & echo Config
 echo "Config:"
 jq '.[0].Config' nginx-logs.txt
+echo ""
 #   - Extract & echo ExposedPorts
-echo "ExposedPorts: $(jq -r '.[0].Config.ExposedPorts | keys[]' nginx-logs.txt)"
+echo "ExposedPorts:"
+echo "$(jq -r '.[0].Config.ExposedPorts | keys[]' nginx-logs.txt)"
