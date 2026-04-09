@@ -1,0 +1,16 @@
+apiVersion: v1
+
+kind: Service
+metadata:
+  name: studentportfolio
+spec:
+  type: ClusterIP
+  selector:
+    matchLabels:
+      app: studentportfolio
+
+## Port Configuration:
+  ports:
+    - port: 80
+      name: http
+      targetPort: http
