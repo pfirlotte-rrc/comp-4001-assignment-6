@@ -1,6 +1,6 @@
 apiVersion: apps/v1
 
-kind: Deployement
+kind: Deployment
 metadata:
   name: backend
 spec:
@@ -31,7 +31,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: backend-secret
-                value: secret
+                value: secret-key
 
 ## Health Probes
         readinessProbe:
@@ -54,10 +54,11 @@ spec:
             memory: "128Mi"
           limits:
             cpu: "500m"
-            memory: 512Mi"
+            memory: "512Mi"
 
 ## Secret Management
-
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: backend-secret
