@@ -5,7 +5,7 @@
 - Rollout History: Set revisionHistoryLimit to 2 to retain a history of old ReplicaSets, allowing for rollbacks.
 - Pod Selector: The deployment must use a selector with the label app: nginx to manage the correct pods.
 
-# Pod Template
+## Pod Template
 
 - Labels: Pods must be labeled with app: nginx.
 - Container: The container must use the nginx:alpine image.
