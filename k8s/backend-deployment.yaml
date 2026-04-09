@@ -1,3 +1,13 @@
+## Secret Management
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-secret
+type: Opaque
+data:
+  secret-key: c3VwZXJzZWNyZXRrZXk=
+
+---
 apiVersion: apps/v1
 
 kind: Deployment
@@ -19,6 +29,7 @@ spec:
       containers:
       - name: backend
         image: backend:latest
+        imagePullPolicy: Never
         ports:
           - containerPort: 5000
             name: http
@@ -55,15 +66,5 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
-
-## Secret Management
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: backend-secret
-type: Opaque
-data:
-  secret-key: c3VwZXJzZWNyZXRrZXk=
 
   

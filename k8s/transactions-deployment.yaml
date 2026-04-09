@@ -19,6 +19,7 @@ spec:
       containers:
       - name: transactions
         image: transactions:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 3000
           name: http
