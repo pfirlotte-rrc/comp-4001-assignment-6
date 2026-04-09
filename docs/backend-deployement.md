@@ -21,7 +21,7 @@ to manage the correct pods.
   mongodb://mongo:27017/bank_app to connect to the MongoDB service.
 - The SECRET_KEY environment variable must be populated from the backend-secret Secret.
 
-## Health Probes:
+## Health Probes
 
 - Readiness Probe: An httpGet probe on the path / and port http must be
   configured. It should have an initialDelaySeconds of 5 and a periodSeconds
@@ -42,4 +42,3 @@ to manage the correct pods.
 - Data: This Secret should contain a key named secret-key with the value
   supersecretkey to be used by the backend application for security purposes. The
   type should be Opaque.
-  
