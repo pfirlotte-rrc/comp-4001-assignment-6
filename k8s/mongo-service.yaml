@@ -7,7 +7,7 @@
 # • Selector: The service must be configured to select pods with the label app:
 # mongo to correctly route traffic to the database instances.
 
-apiVersion: apps/v1
+apiVersion: v1
 kind: Service
 metadata:
   name: mongo
