@@ -1,5 +1,3 @@
-# Script design template
-
 # Validates prerequisites (Docker/Compose installed, ports available) as pre-deployment checks
 
 #----------Check Prerequisites----------
@@ -92,7 +90,15 @@ if [[ ! -f docker-compose.yml ]] ; then
 fi
 
 # Build & deploy with compose
-docker compose up --build -d
+if docker image inspect m6_part-1-backend &> /dev/null && \
+   docker image inspect m6_part-1-transactions &> /dev/null && \
+   docker image inspect m6_part-1-studentportfolio &> /dev/null; then
+    echo "[INFO] Images already exist. Starting without rebuild."
+    docker compose up -d
+else
+    echo "[INFO] One or more images missing. Building..."
+    docker compose up --build -d
+fi
 
 #Give time for backend to build and restart nginx
 sleep 10
@@ -121,14 +127,14 @@ URL="http://localhost:80"
 echo "[INFO] Checking application URL: $URL"
 HTTP=$(curl --head --silent --max-time 10 -o /dev/null -w "%{http_code}" http://localhost:80)
 
-#Checks wether the status code is 200, otherwise indicates its unreachable
+# Checks whether the status code is 200, otherwise indicates its unreachable
 if [ "$HTTP" -eq 200 ]; then
     echo "[INFO] Page rendered successfully (HTTP $HTTP); content signature detected."
 else
     echo "[ERROR] URL doesn't exist or isn't reachable"
 fi
 
-# Ensure jq is installed
+# Ensures jq is installed
 if command -v jq &> /dev/null; then
     echo "[INFO] jq is already installed"
 else
@@ -138,12 +144,16 @@ fi
 
 # Inspect nginx:alpine image that was created.
 echo "[INFO] Ensuring nginx:alpine image exists locally."
-echo "[INFO] Writing docker inspect output to 'nginx-logs'."
-
-# Put the log of docker inspect nginx:alpine in a text file named nginx-logs
-docker image inspect nginx:alpine > nginx-logs.txt
-echo "Extracting values from nginx-logs:"
-echo ""
+if docker image inspect nginx:alpine &> /dev/null; then
+    echo "[INFO] nginx:alpine is installed"
+    # Put the log of docker inspect nginx:alpine in a text file named nginx-logs
+    echo "[INFO] Writing docker inspect output to 'nginx-logs'."
+    docker image inspect nginx:alpine > nginx-logs.txt
+    echo "Extracting values from nginx-logs:"
+    echo ""
+else
+    echo "[Error] nginx:alpine is not isntalled."
+fi
 
 # Extract and echo the values of specified keys from the file.
 #   - Extract & echo RepoTags
