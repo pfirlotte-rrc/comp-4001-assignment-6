@@ -93,7 +93,10 @@ fi
 
 # Build & deploy with compose
 docker compose up --build -d
-sleep 5
+
+#Give time for backend to build and restart nginx
+sleep 10
+docker restart m6_part-1-nginx-1
 
 # Performs health checks (e.g., curl/wget against http://localhost:3000 and http://localhost:5000 if available).
 #   - Validate the build/deploy and list images.
@@ -101,7 +104,7 @@ for port in 3000 5000; do
   if curl -s --max-time 10 http://localhost:$port > /dev/null 2>&1; then
     echo "[INFO] Port $port is responding"
   else
-    echo "[ERROR] Port $port is not available (skipping)"
+    echo "[ERROR] Port $port is not available"
   fi
 done
 
@@ -119,8 +122,8 @@ echo "[INFO] Checking application URL: $URL"
 HTTP=$(curl --head --silent --max-time 10 -o /dev/null -w "%{http_code}" http://localhost:80)
 
 #Checks wether the status code is 200, otherwise indicates its unreachable
-if ["$HTTP" -eq 200]; then
-    echo "[INFO] Page rendered succesfully $HTTP; content signature detected."
+if [ "$HTTP" -eq 200 ]; then
+    echo "[INFO] Page rendered successfully (HTTP $HTTP); content signature detected."
 else
     echo "[ERROR] URL doesn't exist or isn't reachable"
 fi
