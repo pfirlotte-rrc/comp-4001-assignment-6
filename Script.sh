@@ -88,7 +88,7 @@ fi
 #   - Validate the presence of your docker compose file.
 cd M6_Part-1
 if [[ ! -f docker-compose.yml ]] ; then
-  echo "Docker Compose file does not exist"
+  echo "[ERROR] Docker Compose file does not exist"
 fi
 
 # Build & deploy with compose
@@ -99,9 +99,9 @@ sleep 5
 #   - Validate the build/deploy and list images.
 for port in 3000 5000; do
   if curl -s --max-time 10 http://localhost:$port > /dev/null 2>&1; then
-    echo "Port $port is responding"
+    echo "[INFO] Port $port is responding"
   else
-    echo "Port $port is not available (skipping)"
+    echo "[ERROR] Port $port is not available (skipping)"
   fi
 done
 
@@ -116,10 +116,13 @@ echo "[INFO] Captured nginx conatiner ID: $NGINX_ID"
 # Validate the page renders at URL.
 URL="http://localhost:80"
 echo "[INFO] Checking application URL: $URL"
-if curl --head --silent --max-time 10 http://localhost:3000 > /dev/null 2>&1; then
-    echo "[INFO] URL exists"
+HTTP=$(curl --head --silent --max-time 10 -o /dev/null -w "%{http_code}" http://localhost:80)
+
+#Checks wether the status code is 200, otherwise indicates its unreachable
+if ["$HTTP" -eq 200]; then
+    echo "[INFO] Page rendered succesfully $HTTP; content signature detected."
 else
-    echo "URL doesn't exist or isn't reachable"
+    echo "[ERROR] URL doesn't exist or isn't reachable"
 fi
 
 # Ensure jq is installed
@@ -134,10 +137,9 @@ fi
 echo "[INFO] Ensuring nginx:alpine image exists locally."
 echo "[INFO] Writing docker inspect output to 'nginx-logs'."
 
-echo "Extracting values from nginx-logs:"
-
 # Put the log of docker inspect nginx:alpine in a text file named nginx-logs
 docker image inspect nginx:alpine > nginx-logs.txt
+echo "Extracting values from nginx-logs:"
 echo ""
 
 # Extract and echo the values of specified keys from the file.
@@ -160,3 +162,4 @@ echo ""
 #   - Extract & echo ExposedPorts
 echo "ExposedPorts:"
 echo "$(jq -r '.[0].Config.ExposedPorts | keys[]' nginx-logs.txt)"
+echo ""
