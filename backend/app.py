@@ -3,7 +3,6 @@ from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
 import datetime
-from datetime import timezone
 import os
 
 
@@ -13,6 +12,16 @@ app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey')
 # MongoDB configuration
 app.config["MONGO_URI"] = os.environ.get('MONGO_URI', 'mongodb://mongo:27017/bank_app')
 mongo = PyMongo(app)
+
+
+@app.route('/api/health')
+def health():
+    try:
+        # ping mongo
+        mongo.cx.admin.command('ping')
+        return jsonify(status='ok'), 200
+    except Exception as e:
+        return jsonify(status='degraded', error=str(e)), 500
 
 @app.route('/')
 def home():
@@ -87,7 +96,7 @@ def deposit():
     user_id = session['user_id']
     user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
     new_balance = user['balance'] + amount
-    transaction = {'type': 'deposit', 'amount': amount, 'date': datetime.datetime.now(datetime.timezone.utc)}
+    transaction = {'type': 'deposit', 'amount': amount, 'date': datetime.datetime.utcnow()}
     mongo.db.users.update_one(
         {'_id': ObjectId(user_id)},
         {
@@ -118,7 +127,7 @@ def withdraw():
         flash('Insufficient funds', 'error')
         return redirect(url_for('dashboard'))
     new_balance = user['balance'] - amount
-    transaction = {'type': 'withdrawal', 'amount': amount, 'date': datetime.datetime.now(datetime.timezone.utc)}
+    transaction = {'type': 'withdrawal', 'amount': amount, 'date': datetime.datetime.utcnow()}
     mongo.db.users.update_one(
         {'_id': ObjectId(user_id)},
         {
