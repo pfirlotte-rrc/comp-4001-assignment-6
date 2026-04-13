@@ -4,13 +4,15 @@
 # 1. Update and Upgrade Existing Packages
 sudo apt update && sudo apt upgrade -y || { echo "Failed to update/upgrade packages. Exiting."; exit 1; }
 
-#----------Check Docker----------
+#----------Check Docker Installation----------
 if command -v docker &> /dev/null; then
     echo "Docker installation found"
 else
     echo "Installing Docker."
-        # --- Docker Installation ---
+    # Installs docker when docker version is not detected.
 
+    # --- Docker Installation ---
+    
     # 2. Install Required Dependencies for Docker (already good)
     echo -e "\n--- Installing required dependencies for Docker ---"
     sudo apt install -y ca-certificates curl gnupg lsb-release || { echo "Failed to install Docker dependencies. Exiting."; exit 1; }
@@ -54,8 +56,9 @@ else
 fi
 
 #----------Check Docker Compose----------
+#Checks if docker compose gives back a version, if not will install it
 if command -v docker compose &> /dev/null; then
-    echo "Docker compose installation found"
+    echo "Docker compose installation and version found"
 else
     echo "Installing Docker Compose."
     # ===== INSTALL DOCKER COMPOSE v2 =====
@@ -83,29 +86,33 @@ else
 fi
 
 # Cd into the directory containing your deployment artifacts.
-#   - Validate the presence of your docker compose file.
+#   - Validates the presence of the docker compose file.
+# Creates an error message if no file exists 
 cd M6_Part-1
 if [[ ! -f docker-compose.yml ]] ; then
   echo "[ERROR] Docker Compose file does not exist"
 fi
 
 # Build & deploy with compose
+# Checks if all docker image exists first
 if docker image inspect m6_part-1-backend &> /dev/null && \
    docker image inspect m6_part-1-transactions &> /dev/null && \
    docker image inspect m6_part-1-studentportfolio &> /dev/null; then
-    echo "[INFO] Images already exist. Starting without rebuild."
+    echo "[INFO] All Docker Images exist, Starting Docker Compose"
     docker compose up -d
 else
-    echo "[INFO] One or more images missing. Building..."
+# otherwise, if any images are missing, it will build them.
+    echo "[INFO] One or more docker images are missing. Building Images"
     docker compose up --build -d
 fi
 
-#Give time for backend to build and restart nginx
+# Give some time for backend to build and restart nginx as it was starting 
+# before the images could be built in time.
 sleep 10
 docker restart m6_part-1-nginx-1
 
 # Performs health checks (e.g., curl/wget against http://localhost:3000 and http://localhost:5000 if available).
-#   - Validate the build/deploy and list images.
+# Checks Ports 3000 and 5000 and responds if either are responding or not.
 for port in 3000 5000; do
   if curl -s --max-time 10 http://localhost:$port > /dev/null 2>&1; then
     echo "[INFO] Port $port is responding"
@@ -114,11 +121,13 @@ for port in 3000 5000; do
   fi
 done
 
+# Validate the build/deploy and list images.
 docker images
 
 # Show docker ps.
-#   - Collect the container ID of the nginx image and save it as a variable.
 docker ps
+
+# Collect the container ID of the nginx image and save it as a variable.
 NGINX_ID=$(docker ps --filter "ancestor=nginx:alpine" --format "{{.ID}}")
 echo "[INFO] Captured nginx conatiner ID: $NGINX_ID" 
 
@@ -127,17 +136,19 @@ URL="http://localhost:80"
 echo "[INFO] Checking application URL: $URL"
 HTTP=$(curl --head --silent --max-time 10 -o /dev/null -w "%{http_code}" http://localhost:80)
 
-# Checks whether the status code is 200, otherwise indicates its unreachable
+# Checks whether the status code is 200
 if [ "$HTTP" -eq 200 ]; then
     echo "[INFO] Page rendered successfully (HTTP $HTTP); content signature detected."
 else
+# otherwise indicates its unreachable
     echo "[ERROR] URL doesn't exist or isn't reachable"
 fi
 
-# Ensures jq is installed
+# Ensures JQ is installed
 if command -v jq &> /dev/null; then
     echo "[INFO] jq is already installed"
 else
+# If not, installs JQ
     echo "Installing jq."
     sudo apt install jq -y
 fi
@@ -146,12 +157,13 @@ fi
 echo "[INFO] Ensuring nginx:alpine image exists locally."
 if docker image inspect nginx:alpine &> /dev/null; then
     echo "[INFO] nginx:alpine is installed"
-    # Put the log of docker inspect nginx:alpine in a text file named nginx-logs
+# Put the log of docker inspect nginx:alpine in a text file named nginx-logs
     echo "[INFO] Writing docker inspect output to 'nginx-logs'."
     docker image inspect nginx:alpine > nginx-logs.txt
     echo "Extracting values from nginx-logs:"
     echo ""
 else
+# Echoes error that nginx is not installed if previous check failed
     echo "[Error] nginx:alpine is not isntalled."
 fi
 
