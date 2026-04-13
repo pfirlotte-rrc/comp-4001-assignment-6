@@ -56,7 +56,7 @@ else
 fi
 
 #----------Check Docker Compose----------
-#Checks if docker compose gives back a version, if not will install it
+# sChecks if docker compose gives back a version, if not will install it
 if command -v docker compose &> /dev/null; then
     echo "Docker compose installation and version found"
 else
@@ -77,7 +77,7 @@ else
     echo "Port 3000 is available"
 fi
 
-##----------Check Port 5000----------
+#----------Check Port 5000----------
 (echo > /dev/tcp/localhost/5000) >/dev/null 2>&1
 if [ $? -eq 0 ]; then
     echo "Port 5000 is in use"
@@ -86,9 +86,10 @@ else
 fi
 
 # Cd into the directory containing your deployment artifacts.
-#   - Validates the presence of the docker compose file.
-# Creates an error message if no file exists 
 cd M6_Part-1
+
+# Validates the presence of the docker compose file.
+# Creates an error message if no file exists within the part-1
 if [[ ! -f docker-compose.yml ]] ; then
   echo "[ERROR] Docker Compose file does not exist"
 fi
@@ -104,14 +105,13 @@ else
 # otherwise, if any images are missing, it will build them.
     echo "[INFO] One or more docker images are missing. Building Images"
     docker compose up --build -d
-fi
-
 # Give some time for backend to build and restart nginx as it was starting 
 # before the images could be built in time.
-sleep 10
-docker restart m6_part-1-nginx-1
+    sleep 10
+    docker restart m6_part-1-nginx-1
+fi
 
-# Performs health checks (e.g., curl/wget against http://localhost:3000 and http://localhost:5000 if available).
+# Performs health checks .
 # Checks Ports 3000 and 5000 and responds if either are responding or not.
 for port in 3000 5000; do
   if curl -s --max-time 10 http://localhost:$port > /dev/null 2>&1; then
@@ -136,7 +136,7 @@ URL="http://localhost:80"
 echo "[INFO] Checking application URL: $URL"
 HTTP=$(curl --head --silent --max-time 10 -o /dev/null -w "%{http_code}" http://localhost:80)
 
-# Checks whether the status code is 200
+# Checks whether the status code is equal to 200
 if [ "$HTTP" -eq 200 ]; then
     echo "[INFO] Page rendered successfully (HTTP $HTTP); content signature detected."
 else
@@ -144,7 +144,7 @@ else
     echo "[ERROR] URL doesn't exist or isn't reachable"
 fi
 
-# Ensures JQ is installed
+# Ensures JQ is installed by checking for a version
 if command -v jq &> /dev/null; then
     echo "[INFO] jq is already installed"
 else
